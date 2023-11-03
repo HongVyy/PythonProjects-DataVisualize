@@ -8,8 +8,6 @@ def convert():
     km_output = mile_input * 1.61
     output_string.set(km_output)
 
-
-
 #window
 window = ttk.Window(themename ='journal')
 window.title('Demo')
