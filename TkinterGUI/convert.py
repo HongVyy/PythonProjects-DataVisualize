@@ -9,6 +9,7 @@ def convert():
     output_string.set(km_output)
 
 #window
+##ttk.Window(themename) 
 window = ttk.Window(themename ='journal')
 window.title('Demo')
 window.geometry('300x150')
