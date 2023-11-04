@@ -2,7 +2,7 @@ import tkinter as tk
 #from tkinter import ttk
 #test ttkbootstrap theme
 import ttkbootstrap as ttk
-
+#Method
 def convert():
     mile_input = entryInt.get()
     km_output = mile_input * 1.61
