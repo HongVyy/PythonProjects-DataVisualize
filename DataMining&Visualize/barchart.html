@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<div id="my_dataviz"></div>
+<script>
+
+// set the dimensions and margins of the graphvar margin = {top: 50, right: 30, bottom: 50, left: 100},
+var margin = {top: 50, right: 30, bottom: 50, left: 100},  
+    width = 1200,
+    height = 600;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+	.append("svg")
+    	.attr("width", width + margin.left + margin.right)
+    	.attr("height", height + margin.top + margin.bottom)
+  	.append("g")
+    	.attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+
+//Load and parse data from csv file
+d3.csv("https://raw.githubusercontent.com/thanhtruc0308/DSA/main/VietnamPopulation.csv", function(error, data) {
+    if (error) {
+	console.log(error);
+    }
+
+  var subgroups = data.columns.slice(1)
+  var sample = data.slice(38,59)
+  
+  console.log(sample)
+
+// List of subgroups = header of the csv files = soil condition here
+  var groups = d3.map(data, function(d){return(d.Year)}).keys()
+
+// Add X axis
+  var x = d3.scaleBand()
+      .domain(groups)
+      .range([0, width])
+      .padding([0.2])
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+d3.selectAll("text")
+      .attr("transform", "translate(-10,10)rotate(-90)")
+      .style("text-anchor", "end");
+
+ // Add Y axis
+  var y = d3.scaleLinear()
+    .domain([0, 100000000])
+    .range([height,0]);
+ svg.append("g")
+    .call(d3.axisLeft(y));
+ 
+// color palette = one color per subgroup
+  var color = d3.scaleOrdinal()
+    .domain(subgroups)
+    .range(d3.schemeSet2);
+
+  var stackedData = d3.stack()
+    .keys(subgroups)
+    (data)
+console.log(stackedData)
+ 
+//Add Tooltip
+  var mouseover = function(d) {
+    
+    var subgroupName = d3.select(this.parentNode).datum().key; 
+    var subgroupValue = d.data[subgroupName];
+ 
+    d3.selectAll(".myRect").style("opacity", 0.2)
+    
+    d3.selectAll("."+subgroupName)
+      .style("opacity", 1)
+    }
+
+  var mouseleave = function(d) {
+    d3.selectAll(".myRect")
+      .style("opacity",0.8)
+    }
+
+  svg.append("text")
+	.attr("transform","rotate(-90)" )
+	.attr("y",0-margin.left)
+	.attr("x", 0 - (height/2))
+	.attr("dy", "1em")
+	.style("text-anchor", "middle")
+	.text("Population")
+
+  svg.append("text")
+	.attr("transform","translate(" + (width/2) +" ," + (height + margin.top) + ")")
+	.style("text-anchor", "middle")
+	.text("Year")
+
+  svg.append("g")
+    .selectAll("g")
+    .data(stackedData)
+    .enter().append("g")
+      .attr("fill", function(d) { return color(d.key); })
+      .attr("class", function(d){ return "myRect " + d.key })
+      .selectAll("rect")
+      .data(function(d) { return d; })
+      .enter().append("rect")
+        .attr("x", function(d) { return x(d.data.Year);})
+        .attr("y", function(d) { return y(d[1]); })
+        .attr("height", function(d) { return y(d[0]) - y(d[1]);})
+        .attr("width", x.bandwidth())
+        .attr("stroke", "grey")
+      .on("mouseover", mouseover)
+      .on("mouseleave", mouseleave)
+
+
+//Add Legend
+  var size = 20
+  svg.selectAll("mydots")
+	.data(stackedData)
+  	.enter()
+  	.append("rect")
+    	.attr("x", 100)
+    	.attr("y", function(d,i){ return 50 + i*(size+5)})
+    	.attr("width", size)
+    	.attr("height", size)
+    	.style("fill", function(d){ return color(d.key)})
+
+  svg.selectAll("mylabels")
+  	.data(stackedData)
+  	.enter()
+  	.append("text")
+    	.attr("x", 100 + size*1.2)
+    	.attr("y", function(d,i){ return 52 + i*(size+5) + (size/2)})
+    	.style("fill", function(d){ return color(d.key)})
+    	.text(function(d){ return d.key})
+    	.attr("text-anchor", "left")
+    	.style("alignment-baseline", "middle")
+
+})
+</script>
