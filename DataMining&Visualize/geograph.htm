@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Geo Map</title>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+ </head>
+ <body> 
+<style>
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: auto;					
+    height: auto;
+    padding: 2px;				
+    font: 15px sans-serif;		
+    background: DarkCyan;
+    color: white;	
+    border: 1px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+}
+</style> 
+ <svg width="900" height="1000"> </svg> 
+ <script>
+ var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+ var projection = d3.geoAlbers()
+    	.center([114, 4.4])
+	.rotate([2, 32])
+	.parallels([11, 20])
+	.scale(3000)
+	.translate([width / 2, height / 2]);
+ var path = d3.geoPath()
+ 	.projection(projection);
+
+//Load data from csv file
+ d3.csv("https://raw.githubusercontent.com/thanhtruc0308/DSA/main/DataVietnam.csv", function(error, data1){
+	if (error) {
+	  console.log(error);
+    	} else {
+    	  console.log(data1);
+
+ data1.forEach(function(d){
+	d.ma = +d.ma
+	d.density = +d.density
+	d.province = d.province });
+
+//Color Range
+ var colorScale = d3.scaleThreshold()
+  .domain([1, 50, 200, 500, 1000, 2000, 4000])
+  .range(d3.schemeOrRd[7]);
+
+
+//Load json, draw geomap
+ d3.json("https://raw.githubusercontent.com/thanhtruc0308/DSA/main/VietnamProvinces.json", function(json) {
+ for(var i=0; i < data1.length; i++){
+	var dataMa = data1[i].ma;
+	var dataDen = data1[i].density;
+	var dataPro = data1[i].province;
+	var dataPop = data1[i].population;
+	for (var j=0; j < json.features.length; j++){
+		var jsonMa = json.features[j].properties.Ma;
+		if(dataMa == jsonMa){
+		json.features[j].properties.den = dataDen;
+		json.features[j].properties.pro = dataPro;
+		json.features[j].properties.pop = dataPop;	
+		break;
+		}
+	}
+ }
+
+
+//Add Tooltip
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+ var mouseOver = function(d) {
+    svg.selectAll(".Province")
+	.transition()
+	.duration(200)
+	.style("opacity", 0.5)
+	div.transition()		
+                .duration(200)		
+                .style("opacity", 1);		
+        div.html(d.properties.pro +"'s population: "+d.properties.pop +" people")
+	        .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY) + "px")
+     
+   	 d3.select(this)
+    		 .transition()
+       		 .duration(200)
+    		 .style("opacity", 1)
+   		 .style("stroke", "black")
+  }
+
+  var mouseLeave = function(d) {
+    d3.selectAll(".Province")
+      .transition()
+      .duration(200)
+      .style("opacity", .8)
+    d3.select(this)
+      .transition()
+      .duration(200)
+      .style("stroke", "black")
+
+  }
+
+//Add Legend
+svg.append("rect").attr("x",width-500).attr("y",40).attr('width',70).attr("height",20).style("fill", d3.schemeOrRd[7][0] )
+svg.append("text").attr("x", width-490).attr("y", 75).text("1-50").style("font-size", "10px").attr("alignment-baseline","middle")
+
+svg.append("rect").attr("x",width-450).attr("y",40).attr('width',70).attr("height",20).style("fill", d3.schemeOrRd[7][1])
+svg.append("text").attr("x", width-440).attr("y", 75).text("51-200").style("font-size", "10px").attr("alignment-baseline","middle")
+
+
+svg.append("rect").attr("x",width-400).attr("y",40).attr('width',70).attr("height",20).style("fill", d3.schemeOrRd[7][2])
+svg.append("text").attr("x", width-390).attr("y", 75).text("201-500").style("font-size", "10px").attr("alignment-baseline","middle")
+
+svg.append("rect").attr("x",width-350).attr("y",40).attr('width',70).attr("height",20).style("fill", d3.schemeOrRd[7][3])
+svg.append("text").attr("x", width-345).attr("y", 75).text("501-1000").style("font-size", "10px").attr("alignment-baseline","middle")
+
+svg.append("rect").attr("x",width-300).attr("y",40).attr('width',70).attr("height",20).style("fill", d3.schemeOrRd[7][4])
+svg.append("text").attr("x", width-295).attr("y", 75).text("1001-2000").style("font-size", "10px").attr("alignment-baseline","middle")
+
+svg.append("rect").attr("x",width-250).attr("y",40).attr('width',70).attr("height",20).style("fill", d3.schemeOrRd[7][5])
+svg.append("text").attr("x", width-245).attr("y", 75).text("2001-4000").style("font-size", "10px").attr("alignment-baseline","middle")
+
+svg.append("rect").attr("x",width-200).attr("y",40).attr('width',50).attr("height",20).style("fill", d3.schemeOrRd[7][6])
+svg.append("text").attr("x", width-185).attr("y", 75).text("4000+").style("font-size", "10px").attr("alignment-baseline","middle")
+
+svg.append("text").attr("x",width-370).attr("y",30).text("Density(km2)").attr("alignment-baseline","start")
+
+
+ svg.selectAll("path")
+ 	.data(json.features)
+ 	.enter()
+ 	.append("path")
+ 	.attr("d", path)
+	.style("fill", function(d){
+		var den = d.properties.den;
+		if(den){
+		   return colorScale(den);
+		} else {
+		   return "#ccc";
+		}
+	})
+	.style("stroke-width", "0.5")
+        .style("stroke", "black")
+	.attr("class", function(d){ return "Province" } )
+	.on("mouseover", mouseOver )
+      	.on("mouseleave", mouseLeave )
+ 
+
+
+ 
+  });
+
+  
+}})
+ </script> 
+</body>
+</html>
