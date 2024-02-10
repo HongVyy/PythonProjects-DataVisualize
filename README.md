@@ -13,6 +13,7 @@ ypoints = np.array([0, 250])
 plt.plot(xpoints, ypoints)
 plt.show()
 ```
+
 ### Seaborn
 ```python
 import matplotlib.pyplot as plt
